@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: productos_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: productos_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    networks:
+      - productos_network
+
+  backend:
+    build: ./Backend
+    container_name: productos_backend
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=productos_db
+      - DB_USER=root
+      - DB_PASS=rootpassword
+      - PRECIO_USD=1000.00
+    depends_on:
+      - mysql
+    networks:
+      - productos_network
+    volumes:
+      - ./Backend:/var/www/html
+
+  frontend:
+    build: ./Frontend
+    container_name: productos_frontend
+    ports:
+      - "3000:80"
+    networks:
+      - productos_network
+
+volumes:
+  mysql_data:
+
+networks:
+  productos_network:
+    driver: bridge 
